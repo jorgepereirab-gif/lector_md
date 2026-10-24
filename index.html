@@ -63,6 +63,9 @@ input[type=url],input[type=password],input[type=text],textarea,select{
 textarea{font-family:var(--mono);font-size:14px;resize:vertical;margin:10px 0}
 .alt{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .filebtn{display:inline-flex;align-items:center}
+.paste-actions{display:flex;gap:8px;flex-wrap:wrap}
+.paste-actions .ghost{min-height:44px}
+.ghost:disabled{opacity:.45;cursor:default}
 .status{min-height:1.5em;color:var(--muted);margin:14px 0 0}
 .status.err{color:#B3261E}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .status.err{color:#F2B8B5}}
@@ -146,7 +149,10 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     </div>
     <div id="pasteBox" hidden>
       <textarea id="pasteText" rows="8" placeholder="Pega aquí el Markdown"></textarea>
-      <button class="primary" id="btnPasteGo" type="button">Leer este texto</button>
+      <div class="paste-actions">
+        <button class="primary" id="btnPasteGo" type="button">Leer este texto</button>
+        <button class="ghost" id="btnPasteClear" type="button" disabled>Borrar</button>
+      </div>
     </div>
     <p id="status" class="status" role="status"></p>
     <div id="continueBox"></div>
@@ -637,7 +643,12 @@ $('#file').addEventListener('change', e => {
   r.onerror = () => setStatus('No se ha podido leer el fichero.', true);
   r.readAsText(f); e.target.value = '';
 });
-$('#btnPaste').addEventListener('click', () => { const b = $('#pasteBox'); b.hidden = !b.hidden; if(!b.hidden) $('#pasteText').focus(); });
+$('#btnPaste').addEventListener('click', () => { const b = $('#pasteBox'); b.hidden = !b.hidden; if(!b.hidden){ syncPasteClear(); $('#pasteText').focus(); } });
+function syncPasteClear(){ $('#btnPasteClear').disabled = !$('#pasteText').value; }
+$('#pasteText').addEventListener('input', syncPasteClear);
+$('#btnPasteClear').addEventListener('click', () => {
+  const ta = $('#pasteText'); ta.value = ''; syncPasteClear(); ta.focus();
+});
 $('#btnPasteGo').addEventListener('click', () => {
   const t = $('#pasteText').value; if(!t.trim()) return;
   let h = 0; for(let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
